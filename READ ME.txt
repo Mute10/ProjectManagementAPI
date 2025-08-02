@@ -1,0 +1,77 @@
+# 🗂️ Project Management Lifecycle API
+
+## Purpose 
+This API was built to simulate a real-world project management system using FastAPI and PostgreSQL. It replaces scattered tools like emails and spreadsheets by providing a centralized, backend-only system for tracking project lifecycles. Built for performance, the system enables faster, more structured decision-making for project managers and technical teams.
+
+## Features 
+Designed to eliminate manual tracking and promote data-driven clarity in managing projects.
+
+• Full CRUD Support – Create, read, update, and delete project records
+• Lifecycle Management – Organize projects by distinct lifecycle stages (e.g. planning, development, completed)
+• Clean Architecture – Decoupled routes, models, schemas, logic, and database layers
+• Custom Logic Engine – logic.py demonstrates advanced algorithms and problem-solving skills
+• Built-in Documentation – Swagger UI available at /docs for quick testing and exploration
+• Test Coverage – Includes unit tests for key logic functions using unittest and pytest
+• Docker-Ready – Optional Docker support for containerized deployment
+
+## Tech Stack 
+• Python
+• FastAPI
+• PostgreSQL
+• SQLAlchemy
+• Docker 
+
+## Installation
+git clone https://github.com/Mute10/project-management-api.git
+
+## Usage
+```bash
+cd project-management-api
+pip install -r requirements.txt
+uvicorn lifecycle:app --reload
+```
+Visit: http://localhost:8000/docs
+
+## Project Structure 
+├── app/
+│  ├── database.py # PostgreSQL connection setup
+│  ├── models.py # SQLAlchemy models
+│  ├── schemas.py # Pydantic schemas
+│  ├── crud.py # CRUD operations
+│  ├── lifecycle.py # API routes for project lifecycle
+│  ├── logic.py # Logic utilities (sorting, DFS, regex, etc.)
+│  └── test_logic.py # Unit tests for logic module
+├── .gitignore # Ignored files/folders
+├── README.md # Project documentation
+
+## Logic Overview 
+Contains standalone Python functions that demonstrate my growing understanding of algorithms, data structures, and real-world problem-solving patterns. Each function is designed to be modular and testable, serving as a reflection of what I've studied and practiced throughout this project.
+
+- Binary Search – Efficient lookup in sorted data  
+- Depth-First Search (DFS) – Traversal for graph-like or tree structures  
+- Subset Sum (Dynamic Programming) – Solving classic DP problems  
+- Longest Common Prefix – Optimized string matching  
+- Regex Parsing – Extracting values using regular expressions  
+- Memoization – Speeding up recursion with caching  
+- Reference vs. Value – Demonstrating mutation behavior in Python  
+- ConnectionRefusedError – Graceful error handling example  
+- Custom Exception – Manually raised and caught for clarity  
+- Set vs. Frozenset – Showing differences in mutability  
+- Sorting Techniques – Different approaches to sorting data  
+- CSV Export – Outputting structured data as CSV  
+- Linked List & Hash Map – Manual implementations  
+- Stack & Queue – Modeled with Python collections  
+- Graph (Adjacency List) – Basic graph representation and traversal
+
+## Testing 
+
+This project uses two separate test files for full backend coverage:
+
+- `test_logic.py` – Covers algorithmic and utility functions in `logic.py`
+- `lifecycle.py` – Contains pytest tests to validate lifecycle API routes
+
+
+## Author
+Mike Siwik
+I enjoy building backend projects that focus on clean architecture, testable logic, and real-world problem solving.
+GitHub: https://github.com/Mute10
