@@ -16,7 +16,7 @@ app = FastAPI()
 status_pipeline = ['backlog', 'in_progress', 'review', 'done' ]
 
 # This clarifies the main phases of a project lifecycle. If the format
-#doesn't match the requirements (correct grammer and spacign it could produce an error
+#doesn't match the requirements (correct grammar and spacign it could produce an error
 class BeginningPhase:
     def __init__(self, initiation, planning, execution):
         self.initiation = initiation
