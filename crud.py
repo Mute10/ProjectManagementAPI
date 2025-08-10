@@ -1,3 +1,4 @@
+# works together with schemastic file or schemas to unsure maximum functionality 
 from sqlalchemy.orm import Session
 from database import Project
 from schematics import ProjectCreate
