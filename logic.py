@@ -15,6 +15,8 @@ app = FastAPI()
 
 status_pipeline = ['backlog', 'in_progress', 'review', 'done' ]
 
+# This clarifies the main phases of a project lifecycle. If the format
+#doesn't match the requirements (correct grammer and spacign it could produce an error
 class BeginningPhase:
     def __init__(self, initiation, planning, execution):
         self.initiation = initiation
@@ -39,7 +41,7 @@ class BeginningPhase:
           else: 
                 raise ValueError("Unsupported task data type")
             
-
+# A container/folder with three seperate categories
     def review_tasks(self):
           finishedTasks = []
           unfinishedTasks = []
@@ -56,6 +58,7 @@ class BeginningPhase:
                     unfinishedTasks.append(f"{task} needs to get done")
           return finishedTasks, unfinishedTasks
 
+# Incase server is down you're provided with an explanation
 def simulate_connection():
     try:
           s = socket.create_connection(("127.0.0.1", 9999), timeout = 2)
@@ -66,7 +69,8 @@ def simulate_connection():
           return f"Other error: {type(e).__name__} - {e}"
     
 
-  # DATA STRUCTURES: LINKED LIST  
+  # This Linked List here may append new completed tasks to others saving
+# you the trouble manulally entering them one at a time
 class TaskNode:
       def __init__(self, data):
             self.data = data
@@ -92,14 +96,15 @@ class TaskLinkedList:
                   current = current.next
             return tasks
      
-# === Project Burn rate calculator
+# Project Burn rate calculator that handles the financial side
 def calculate_burn_rate(total_budget: float, spent_so_far: float, monthly_cost: float) -> float:
       if monthly_cost == 0:
             raise ValueError("Monthly cost can't be zero")
       remaining = total_budget - spent_so_far
       return round(remaining / monthly_cost, 2)
 
-# === SORTING THROUGH TASKS ===
+# Basic sorting method that allows you to select the level of urgency
+# by typing in a single digit
 def sort_tasks_by_length(task_list):
           return sorted(task_list, key = len) 
 
@@ -123,7 +128,7 @@ def sort_tasks_alphabetically(task_list, reverse=False):
   
 
 
-# === SETS AND FROZENSETS ===
+# a combination of sets and frozen sets that supports the main directory storage
 def get_unique_tags(*tag_groups):
           all_tags = set()
           for group in tag_groups:
@@ -142,7 +147,7 @@ team2 = ["charlie", "dana", "bob"]
 common_members = find_common_team_members(team1, team2)
 
 
-# === BINARY SEARCH ===
+# A mandatory binary search, it analyzes each data file entered 
 def binary_search_task_by_title(task_list, target_title):
     sorted_tasks = sorted(task_list)
     low = 0
@@ -160,12 +165,10 @@ def binary_search_task_by_title(task_list, target_title):
     return -1
 
       
-      # === GRAPH TRAVERSAL DFS ===
+      # Performs a Depth-First Search traversal of a task graph.
+    # Returns the list of visited tasks in order. 
 def dfs_traverse(graph, start_task, visited=None):
-       """
-    Performs a Depth-First Search traversal of a task graph.
-    Returns the list of visited tasks in order.
-    """
+   
        if visited is None:
              visited = []
        visited.append(start_task)
@@ -174,7 +177,8 @@ def dfs_traverse(graph, start_task, visited=None):
                    dfs_traverse(graph, neighbor, visited)
        return visited
 
-# DYNAMIC PROGRAMMING: WARNINGS
+# My favorite - DP! covers all potential downsides when navigatign through a 
+# janky website
 import warnings
 def safe_budget_match(file_path: str, target: int) -> bool:
       try:
@@ -211,7 +215,7 @@ def safe_budget_match(file_path: str, target: int) -> bool:
 
 
 
-# === DYNAMIC PROGRAMMING: TASK SELECTION
+# More DP that implements a better task handling system
 def select_tasks_by_value(tasks, max_capacity):
  
       n = len(tasks)
@@ -244,7 +248,7 @@ tasks = [
 ]
 best = select_tasks_by_value(tasks, max_capacity=5)
 
-# KNAPSACK DP
+# Knapsack DP: not sure what this does
 def max_project_value(costs: list[int], values: list[int], budget: int) -> int:
       n = len(costs)
       dp = [[0] * (budget + 1) for _ in range(n + 1)]
@@ -256,6 +260,8 @@ def max_project_value(costs: list[int], values: list[int], budget: int) -> int:
                         dp[i][w] = dp[i - 1][w]
       return dp[n][budget]
 
+# this array limits the amount of tasks that can be placed into a container
+# before having clear the contents
 class DynamicArray:
       def __init__(self):
             self.capacity = 4
@@ -280,7 +286,7 @@ class DynamicArray:
             return self.length
                              
 
-# DATA STRUCTURES: QUEUE
+# queue time that prevents rapid adding of projects into the directories
 class TaskQueue:
       def __init__(self):
             self.queue = deque()
@@ -300,7 +306,7 @@ class TaskQueue:
             return len(self.queue)
       
 
-# DATA STRUCTURES: STACK
+# not sure what this does
 class TasksStack:
       def __init__(self):
             self.stack = []
@@ -322,7 +328,7 @@ class TasksStack:
             return len(self.stack)
 
 
-#  STRING ANALYSIS: LCP
+#  makes use of import string. validating a strong urge for string format
 def longest_common_prefix(strings):
       if not strings:
             return ""
@@ -341,7 +347,7 @@ def longest_common_prefix(strings):
 
 
 
- #REGEX PATTERNS
+ # regex, this block is like a security camera and prevents faulty entries
 import re
 def match_task_code(text):
       pattern = r'\b(?:PRJ|TASK|BUG) - \d{1, 4}\b'
@@ -366,7 +372,7 @@ text = "Contact alice@acme.com or bob_dev@example.org. Deadline: 2025-09-01. Ano
       
 
 
-# CSV EXPORT
+# makes use of csv and string IO imports, no idea what this does
 def export_tasks_to_csv(task_list):
       output = StringIO()
       writer = csv.writer(output)
@@ -399,7 +405,7 @@ csv_data = export_task_dicts_to_csv(task_data)
 
 
 
-# DATA STRUCTURES: HASH MAP
+# allows for many files of data to be stored up to 1 GB per contianer
 def group_tasks_by_priority(task_list):
       priority_map = {
             "high": [],
@@ -434,7 +440,7 @@ def group_tasks_by_priority(task_list):
       return priority_map
 
 
-# ENUMS
+# enum logic that handles a list of options regarding a projects' status
 class ProjectStatus(Enum):
       BACKLOG = "backlog"
       IN_PROGRESS = "in_progress"
@@ -451,7 +457,7 @@ class ProjectStatus(Enum):
       def convert_to_status_enum(status: str):
             return ProjectStatus(status)
 
-# PYTHON CORE: REFERNCE VS VALUE
+# R vs V: not sure if this is even needed
 def demonstrate_reference_vs_value():
       original = ["alpha", "beta", "gamma"]
       reference = original
@@ -465,7 +471,9 @@ def demonstrate_reference_vs_value():
             "value_copy": value_copy
       }
 
-# FILE SYSTEM + CHILD PROCESS INTEGRATION
+
+#  a file system that gathers information on what type of machine you're using and
+# uses import subprocess and os for further clarification
 def export_tasks_to_csv(tasks_with_status, filepath="exported_tasks.csv"):
       try:
             with open(filepath, "w") as f:
@@ -502,7 +510,7 @@ def open_csv_file(filepath="exported_tasks.csv"):
             return f"Unhandled error: {type(e).__name__} - {e}"
 
 
-
+# no idea what's going on here, functools?
 def case_study(self, task1, task2):
           process = f"Analyzing {task1} and {task2}"
           infrastructure = "tools"
@@ -519,7 +527,7 @@ class Monitoring(BeginningPhase):
             def control_applied(self, risk):
                   return f"If '{risk}' occurs, apply control method {self.control}"
 
-
+# fast API route
 @app.get("/tasks/review")
 def get_reviewed_tasks():
       finished, unfinished = pm_phase.review_tasks()
@@ -528,16 +536,15 @@ def get_reviewed_tasks():
             "unfinished" : unfinished
       }
 
-
+# max file name is 64 characters?
 @functools.lru_cache(maxsize=64)
 def memoized_effort_estimate(n):
       if n <= 1:
             return 1
       return memoized_effort_estimate(n -1) + memoized_effort_estimate(n -2)
 
-
+# variables that maintain the programs functionality
 pm_phase = Monitoring("initiation", "planning", "execution", "control")
-
 pm_phase.load_tasks(["urgent client request", "check status report"])
 pm_phase.load_tasks([
     ["urgent meeting"],
@@ -562,12 +569,12 @@ task_graph = {
       "Approval": []
       }
 
-
+#not sure about these three lines
 task_list = pm_phase.tasks
 target = "urgent client request"
 csv_data = export_tasks_to_csv(task_list)
 
-
+# allows users to search for tasks in the contianers by key words
 index = binary_search_task_by_title(task_list, target)
 if index != -1:
       print(f"Found '{target}' at index '{index}'")
@@ -595,17 +602,9 @@ def __repr__(self):
           )
 
 
-
+# time is always a factor in project management: this is a Utility function to calculate a project's expected deadline.
+# it simply returns a YYYY-MM-DD in string format. only returns an error if the deadline is changed without permission
 from datetime import datetime, timedelta
-"""
-    Utility function to calculate a project's expected deadline.
-
-    Returns:
-        str: Calculated deadline in 'YYYY-MM-DD' format.
-
-    Raises:
-        ValueError: If the input format is invalid or duration is negative.
-    """
 def forecast_deadline(start_date: str, duration_days: int) -> str:
       if duration_days < 0:
             raise ValueError("Duration can't be negative")
@@ -617,7 +616,7 @@ def forecast_deadline(start_date: str, duration_days: int) -> str:
       return deadline.strftime("%Y-%m-%d")
 
 
-# UNION FIND
+# pulls one type of data into another incase the files is placed into the wrong contianer
 class UnionFind:
       def __init__(self):
             self.parent = {}
@@ -655,7 +654,7 @@ class UnionFind:
                   return False
             return self.find(person1) == self.find(person2)
 
-
+# do i even need this?
 class RollingAverageCalculator:
       def __init__(self, window_size=3):
             self.window_size = window_size
@@ -672,7 +671,7 @@ class RollingAverageCalculator:
             return sum(self.values) / len(self.values)
 
 
-#LINEAR PROBING
+# Linear probing short but sweet
 def linear_probe_insert(table: list, key: str, size: int = 10) -> int:
       index = sum(ord(c) for c in key) % size
       for i in range(size):
@@ -682,7 +681,7 @@ def linear_probe_insert(table: list, key: str, size: int = 10) -> int:
                   return probe_index
             raise Exception("Hash table is full.")
       
-
+# my main problem solver, this block finds the most optimal solution when unsure where a project should go
 class SimplexSolver:
       def __init__(self, a, b ,c):
             self.a = [row[:] for row in a]
