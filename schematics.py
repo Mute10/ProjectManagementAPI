@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
-
+# this purpose of this file is so project managers can add extra information
 class ProjectBase(BaseModel):
     name: str
     description: Optional[str] = None
