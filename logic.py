@@ -10,13 +10,15 @@ import socket
 from collections import deque
 import subprocess
 import os
+from typing import Dict, List, Optional
+
 
 app = FastAPI()
 
 status_pipeline = ['backlog', 'in_progress', 'review', 'done' ]
 
-# This clarifies the main phases of a project lifecycle. If the format
-#doesn't match the requirements (correct grammar and spacign it could produce an error
+# This class handles initiation, planning, and execution stages and manages a list of tasks related to this phase.
+# Note: The format of input tasks must be consistent, otherwise unexpected behavior/errors may occur.
 class BeginningPhase:
     def __init__(self, initiation, planning, execution):
         self.initiation = initiation
@@ -24,13 +26,24 @@ class BeginningPhase:
         self.execution = execution
         self.tasks = []
     def load_tasks(self, task_input):
+          """
+        Loads tasks into the phase's task list.
+        Acceptable input types:
+        - str: a single task string added directly
+        - list or tuple: can contain strings or nested lists/tuples; 
+          nested items are joined into a single string
+        - dict: keys of the dictionary are added as task descriptions
+        Raises ValueError if the input type is unsupported.
+        """
           if isinstance(task_input, str):
                 self.tasks.append(task_input)
           elif isinstance(task_input, (list, tuple)):
                 for item in task_input:
                       if isinstance(item, (list, tuple)):
+                          # Join nested list/tuple elements into one string separated by spaces
                             self.tasks.append(" ".join(item))
                       elif isinstance(item, str):
+                             # Append a random 3-character ID tag to each string task
                             random_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k = 3))
                             tagged_task = f"{item.strip()} [ID:{random_id}]"
                             self.tasks.append(tagged_task)
@@ -41,16 +54,21 @@ class BeginningPhase:
           else: 
                 raise ValueError("Unsupported task data type")
             
-# A container/folder with three seperate categories
+# Reviews tasks and categorizes them into finished and unfinished based on urgency keywords.
+# Returns two lists:
+# finishedTasks: a list of tuples containing task descriptions marked as done, along with an urgency level score.
+# unfinishedTasks: a list of task descriptions still needing completion.
     def review_tasks(self):
           finishedTasks = []
           unfinishedTasks = []
           for task in self.tasks:
+              # Check if task contains any urgency-related keywords (case-insensitive)
                 if ("urgent" in task.lower()
                     or "important" in task.lower()
                     or "critical" in task.lower()
                     or "priority" in task.lower()
                     ):
+                    # Mark task as done and calculate an urgency score based on task length
                      project_list = task + " +  is done"
                      level_of_urgency = math.ceil(len(task) * 1.5)
                      finishedTasks.append((project_list, level_of_urgency))
@@ -58,7 +76,8 @@ class BeginningPhase:
                     unfinishedTasks.append(f"{task} needs to get done")
           return finishedTasks, unfinishedTasks
 
-# Incase server is down you're provided with an explanation
+# Attempts to establish a connection to a local server.
+# If the server is down or unreachable, provides a clear explanation of the error.
 def simulate_connection():
     try:
           s = socket.create_connection(("127.0.0.1", 9999), timeout = 2)
@@ -69,8 +88,9 @@ def simulate_connection():
           return f"Other error: {type(e).__name__} - {e}"
     
 
-  # This Linked List here may append new completed tasks to others saving
-# you the trouble manulally entering them one at a time
+# A linked list to manage completed tasks.
+# Allows appending new tasks without manual insertion one by one,
+# and provides a method to retrieve all tasks as a list.
 class TaskNode:
       def __init__(self, data):
             self.data = data
@@ -80,6 +100,9 @@ class TaskLinkedList:
       def __init__(self):
             self.head = None
       def append(self, data):
+          """
+        Adds a new task node with the given data to the end of the list.
+        """
             new_node = TaskNode(data)
             if not self.head:
                   self.head = new_node
@@ -89,6 +112,9 @@ class TaskLinkedList:
                   current = current.next
             current.next = new_node
       def display(self):
+          """
+        Returns a list of all task data stored in the linked list nodes.
+        """
             tasks = []
             current = self.head
             while current:
@@ -96,19 +122,34 @@ class TaskLinkedList:
                   current = current.next
             return tasks
      
-# Project Burn rate calculator that handles the financial side
+# Calculates how many months a project can continue based on the remaining budget and monthly expenses.
+# Raises an error if monthly cost is zero to avoid division by zero.
 def calculate_burn_rate(total_budget: float, spent_so_far: float, monthly_cost: float) -> float:
       if monthly_cost == 0:
             raise ValueError("Monthly cost can't be zero")
       remaining = total_budget - spent_so_far
       return round(remaining / monthly_cost, 2)
 
-# Basic sorting method that allows you to select the level of urgency
-# by typing in a single digit
+
+# Provides different methods to sort a list of tasks by urgency, length, or alphabetically.
 def sort_tasks_by_length(task_list):
+     """
+    Sorts tasks based on their length (number of characters).
+    Shorter tasks will come first.
+    """
           return sorted(task_list, key = len) 
 
 def sort_tasks_by_keyword_priority(task_list):
+    """
+    Sorts tasks based on urgency keywords within the task description.
+    Priority order (highest to lowest):
+        1 - "critical"
+        2 - "urgent"
+        3 - "important"
+        4 - "priority"
+        5 - no keyword found
+    Tasks with higher urgency appear earlier in the list.
+    """
           def priority_value(task):
                 task_lower = task.lower()
                 if "critical" in task_lower:
@@ -124,21 +165,27 @@ def sort_tasks_by_keyword_priority(task_list):
           return sorted(task_list, key = priority_value)  
     
 def sort_tasks_alphabetically(task_list, reverse=False):
+    """
+    Sorts tasks alphabetically.
+    By default, sorts A to Z; set reverse=True to sort Z to A.
+    """
           return sorted(task_list, reverse=reverse)
   
 
 
-# a combination of sets and frozen sets that supports the main directory storage
+# Combines multiple groups of tags into a single immutable set of tags.
+# Accepts any number of iterable tag groups (lists, sets, etc.)
 def get_unique_tags(*tag_groups):
           all_tags = set()
           for group in tag_groups:
                 all_tags.update(group)
-          return frozenset(all_tags)
+          return frozenset(all_tags) # Returns frozenset for immutability 
     
 tags1 = ["urgent", "planning", "execution"]
 tags2 = ["execution", "control", "review"]
 unique_tags = get_unique_tags(tags1, tags2)
 
+# Finds common members between two teams by returning the intersection of their member sets.
 def find_common_team_members(team_a, team_b):
           return set(team_a) & set(team_b)
     
@@ -147,28 +194,51 @@ team2 = ["charlie", "dana", "bob"]
 common_members = find_common_team_members(team1, team2)
 
 
-# A mandatory binary search, it analyzes each data file entered 
-def binary_search_task_by_title(task_list, target_title):
-    sorted_tasks = sorted(task_list)
-    low = 0
-    high = len(sorted_tasks) -1
+from typing import List
+
+def binary_search_task_by_title(sorted_task_list: List[str], target_title: str) -> int:
+    """
+    Performs binary search on a sorted list of task titles.
+
+    Args:
+        sorted_task_list (List[str]): A list of task titles already sorted alphabetically.
+        target_title (str): The task title to search for.
+
+    Returns:
+        The index of target_title in the sorted_task_list if found.
+
+    Note:
+        The list must be sorted before calling this function.
+        The returned index corresponds to the sorted list, not the original.
+    """
+    low, high = 0, len(sorted_task_list) - 1
 
     while low <= high:
-          mid = (low + high) // 2
-          mid_task = sorted_tasks[mid]
-          if mid_task == target_title:
-                return mid
-          elif mid_task < target_title:
-                low = mid +1
-          else:
-                high = mid -1
+        mid = (low + high) // 2
+        mid_task = sorted_task_list[mid]
+
+        if mid_task == target_title:
+            return mid
+        elif mid_task < target_title:
+            low = mid + 1
+        else:
+            high = mid - 1
     return -1
 
+
       
-      # Performs a Depth-First Search traversal of a task graph.
-    # Returns the list of visited tasks in order. 
+# Performs a Depth-First Search traversal on a task dependency graph.
+# Returns the list of tasks visited in DFS order starting from start_task.
 def dfs_traverse(graph, start_task, visited=None):
-   
+      """
+    Args:
+        graph (Dict[str, List[str]]): A dictionary representing the graph where keys are tasks and
+        values are lists of neighboring tasks.
+        start_task (str): The task to start traversal from.
+        visited (Optional[List[str]]): List of tasks already visited (used in recursion).
+
+    Returns: List of visited tasks in the order they were traversed.
+    """
        if visited is None:
              visited = []
        visited.append(start_task)
@@ -177,10 +247,24 @@ def dfs_traverse(graph, start_task, visited=None):
                    dfs_traverse(graph, neighbor, visited)
        return visited
 
-# My favorite - DP! covers all potential downsides when navigatign through a 
-# janky website
+
+# Dynamic programming to check if any combination of numbers from a file sums to a target value.
+# Handles various file read errors and warns about potential future deprecation.
 import warnings
 def safe_budget_match(file_path: str, target: int) -> bool:
+        """
+    Args:
+        file_path (str): Path to the file containing numbers (one per line).
+        target (int): The target sum to check for.
+
+    Returns:
+        bool: True if any subset of numbers sums to the target, False otherwise.
+    
+    Notes:
+        - The function reads the file safely, handling Unicode and other errors.
+        - Emits a PendingDeprecationWarning about future deprecation.
+        - Uses a dynamic programming approach to find subset sums.
+    """
       try:
             with open(file_path, encoding="utf-8") as f:
                   lines = f.readlines()
