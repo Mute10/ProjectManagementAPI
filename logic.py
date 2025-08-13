@@ -11,6 +11,7 @@ from collections import deque
 import subprocess
 import os
 from typing import Dict, List, Optional
+import ast
 
 
 app = FastAPI()
@@ -282,16 +283,19 @@ def safe_budget_match(file_path: str, target: int) -> bool:
       try:
             numbers = []
             for line in lines:
-                  value = eval(line.strip())
-                  if isinstance(value, complex):
-                        raise ValueError("Complex numbers are not supported.")
-                  numbers.append(int(value))
+                  value = ast.literal_eval(line.strip())
+                  if not isinstance(value, (int, float)):
+                        raise ValueError("Only numeric values are supported.")
+                  numbers.append(value)
       except ValueError as ve:
             print(f"Value error while parsing numbers: {ve}")
             return False
       except ProcessLookupError:
-            print("Process related erorr occured.")
+            print("Process related error occured.")
             return False
+
+
+          # Dynamic programming set to keep track of achievable sums
       dp = {0}
       for num in numbers:
             dp |= {x + num for x in dp}
@@ -299,11 +303,24 @@ def safe_budget_match(file_path: str, target: int) -> bool:
 
 
 
-# More DP that implements a better task handling system
+
 def select_tasks_by_value(tasks, max_capacity):
- 
+    """
+    Selects tasks to maximize total value without exceeding the maximum capacity using dynamic programming.
+    This is a classic 0/1 knapsack problem implementation.
+
+    Args:
+        tasks (list of tuples): Each tuple is (name, value, cost).
+        max_capacity (int): Maximum allowed total cost.
+
+    Returns:
+        dict: Contains "max_value" and "selected_tasks" list.
+    """
+    
       n = len(tasks)
       dp = [[0] * (max_capacity +1) for _ in range(n +1)]
+
+      # Build DP table: max value for first i tasks and capacity c
       for i in range(1, n + 1):
             name, value, cost = tasks[i - 1] 
             for c in range(max_capacity + 1):
@@ -314,9 +331,11 @@ def select_tasks_by_value(tasks, max_capacity):
 
       selected = []  
       c = max_capacity
+
+      # Backtrack to find selected tasks
       for i in range(n, 0, -1):
             if dp[i][c] != dp[i-1][c]:
-                  name, value, task = tasks[i-1]
+                  name, value, cost = tasks[i-1]
                   selected.append(name)
                   c -= cost
       return {
@@ -332,46 +351,49 @@ tasks = [
 ]
 best = select_tasks_by_value(tasks, max_capacity=5)
 
-# Knapsack DP: not sure what this does
-def max_project_value(costs: list[int], values: list[int], budget: int) -> int:
-      n = len(costs)
-      dp = [[0] * (budget + 1) for _ in range(n + 1)]
-      for i in range(1, n + 1):
-            for w in range(budget + 1):
-                  if costs[i - 1] <= w:
-                        dp[i][w] = max(dp[i - 1][w], values[i - 1] + dp[i - 1][w - costs[i - 1]])
-                  else:
-                        dp[i][w] = dp[i - 1][w]
-      return dp[n][budget]
 
-# this array limits the amount of tasks that can be placed into a container
-# before having clear the contents
+
 class DynamicArray:
+    """
+    A dynamic array that automatically resizes when capacity is reached.
+    Starts with a capacity of 4 and doubles size as needed.
+    """
       def __init__(self):
             self.capacity = 4
             self.length = 0
             self.data = [None] * self.capacity
+          
       def append(self, value):
+           """Add a new element to the array, resizing if necessary."""
             if self.length == self.capacity:
                   self._resize()
             self.data[self.length] = value
             self.length += 1
+
       def _resize(self):
+          """Double the capacity and copy existing elements to new storage."""
             self.capacity *= 2
             new_data = [None] * self.capacity
             for i in range(self.length):
                   new_data[i] = self.data[i]
             self.data = new_data
+
       def __getitem__(self, index):
+          """Get item at the specified index, raise error if out of bounds."""
             if 0 <= index < self.length:
                   return self.data[index]
             raise IndexError("Index out of bounds")
+
       def __len__(self):
             return self.length
                              
 
-# queue time that prevents rapid adding of projects into the directories
+
 class TaskQueue:
+    """
+    A queue to manage tasks, preventing rapid adding of projects into directories.
+    Uses a deque for efficient enqueue and dequeue operations.
+    """
       def __init__(self):
             self.queue = deque()
 
@@ -379,9 +401,13 @@ class TaskQueue:
             self.queue.append(task)
 
       def dequeue(self):
+        """
+        Remove and return the task at the front of the queue.
+        Returns None if the queue is empty.
+        """
             if not self.queue:
                   return None
-            return self.queue[0]
+            return self.queue.popleft()
       
       def is_empty(self):
             return len(self.queue) == 0
@@ -390,18 +416,30 @@ class TaskQueue:
             return len(self.queue)
       
 
-# not sure what this does
+
 class TasksStack:
+    """
+    A stack data structure to manage tasks using LIFO (Last-In, First-Out) order.
+    Supports pushing, popping, peeking, and checking size or emptiness.
+    """
       def __init__(self):
             self.stack = []
       def push(self, task):
             self.stack.append(task)
       def pop(self):
+        """
+        Remove and return the top task from the stack.
+        Returns None if the stack is empty.
+        """
             if not self.stack:
                   return None
             return self.stack.pop()
       
       def peek(self):
+        """
+        Return the top task without removing it.
+        Returns None if the stack is empty.
+        """
             if not self.stack:
                   return None
             return self.stack[-1]
@@ -412,8 +450,18 @@ class TasksStack:
             return len(self.stack)
 
 
-#  makes use of import string. validating a strong urge for string format
+
 def longest_common_prefix(strings):
+    """
+    Finds the longest common prefix string amongst a list of strings.
+
+    Args:
+        strings (list of str): List of strings to evaluate.
+
+    Returns:
+        str: The longest common prefix shared by all strings in the list.
+             Returns an empty string if the list is empty or no common prefix exists.
+    """
       if not strings:
             return ""
       
@@ -423,6 +471,7 @@ def longest_common_prefix(strings):
       prefix = ""
 
       for i in range(min(len(first), len(last))):
+      #Compare characters between first and last strings until mismatch
             if first[i] == last[i]:
                   prefix += first[i]
             else:
@@ -431,15 +480,39 @@ def longest_common_prefix(strings):
 
 
 
- # regex, this block is like a security camera and prevents faulty entries
+
 import re
 def match_task_code(text):
+    """
+    Finds all occurrences of task codes in the given text.
+    Task codes follow the format: PRJ-, TASK-, or BUG- followed by 1 to 4 digits.
+
+    Args:
+        text (str): The input text to search.
+
+    Returns:
+        list: All matching task codes found in the text.
+    """
+    
       pattern = r'\b(?:PRJ|TASK|BUG) - \d{1, 4}\b'
       return re.findall(pattern, text)
+Example:
 text = "Update PRJ-001, check TASK-42, and ignore BUG-999 for now"
 
 
 def extract_emails_and_deadlines(task_list):
+    """
+    Extracts email addresses and deadline dates from a list of task-related strings.
+
+    Args:
+        task_list (list of str): List of strings containing emails and deadlines.
+
+    Returns:
+        dict: A dictionary with keys:
+            - "emails": List of extracted email addresses.
+            - "deadlines": List of extracted deadline dates in YYYY-MM-DD format.
+    """
+
     email_pattern = r'[\w\.-]+@[\w\.-]+\.\w+'
     deadline_pattern = r'\d{4}-\d{2}-\d{2}'
     
@@ -451,13 +524,24 @@ def extract_emails_and_deadlines(task_list):
         deadlines.extend(re.findall(deadline_pattern, text))
     
     return {"emails": emails, "deadlines": deadlines}
-
+# Example:
 text = "Contact alice@acme.com or bob_dev@example.org. Deadline: 2025-09-01. Another task is due by 2025-10-15."
       
 
 
-# makes use of csv and string IO imports, no idea what this does
+
 def export_tasks_to_csv(task_list):
+    """
+    Export a list of tasks (strings) to CSV format as a single-column CSV.
+
+    Args:
+        task_list (list of str): List of task names.
+
+    Returns:
+        str: CSV-formatted string with a header "Task" and one task per line.
+    """
+
+      # Write CSV header
       output = StringIO()
       writer = csv.writer(output)
       writer.writerow(["Task"])
@@ -468,6 +552,17 @@ def export_tasks_to_csv(task_list):
 
 
 def export_task_dicts_to_csv(task_dicts):
+    """
+    Export a list of task dictionaries to CSV format.
+
+    Args:
+        task_dicts (list of dict): Each dict represents a task with keys as column names.
+
+    Returns:
+        str: CSV-formatted string with headers and task data.
+             Returns an empty string if task_dicts is empty.
+    """
+    
       if not task_dicts:
             return ""
 
@@ -480,6 +575,7 @@ def export_task_dicts_to_csv(task_dicts):
             writer.writerow(row)
       return output.getvalue()
 
+# Example:
 task_data = [
     {"title": "urgent fix", "status": "in_progress"},
     {"title": "plan Q4", "status": "backlog"},
@@ -489,8 +585,13 @@ csv_data = export_task_dicts_to_csv(task_data)
 
 
 
-# allows for many files of data to be stored up to 1 GB per contianer
+
 def group_tasks_by_priority(task_list):
+    """
+    hash map:
+    Groups tasks into 'high', 'medium', and 'low' priority lists
+    based on keywords in the task descriptions.
+    """
       priority_map = {
             "high": [],
             "medium": [],
@@ -503,46 +604,53 @@ def group_tasks_by_priority(task_list):
             elif "important" in lower:
                   priority_map["medium"].append(task)
             else:
-                  priority_map["low"].append(tasks)
-      return priority_map
-
-def group_tasks_by_priority(task_list):
-      priority_map = {
-            "high": [],
-            "medium": [],
-            "low": []
-      }
-
-      for task in task_list:
-            lower = task.lower()
-            if "critical" in lower or "urgent" in lower:
-                  priority_map["high"].append(task)
-            elif "important" in lower:
-                  priority_map["medium"].append(task)
-            else:
-                  priority_map["low"].append(tasks)
+                  priority_map["low"].append(task)
       return priority_map
 
 
-# enum logic that handles a list of options regarding a projects' status
+
+
 class ProjectStatus(Enum):
+    """
+    Enum representing possible statuses of a project.
+
+    Methods:
+        is_valid_status(status): Checks if a string is a valid project status.
+        convert_to_status_enum(status): Converts a string to the corresponding ProjectStatus enum.
+    """
       BACKLOG = "backlog"
       IN_PROGRESS = "in_progress"
       REVIEW =  "review"
       DONE = "done"
 
-      def is_valid_status(status: str):
+      @staticmethod
+      def is_valid_status(status: str) -> bool:
+           """Return True if status string matches any ProjectStatus member."""
             try:
                   ProjectStatus(status)
                   return True
             except ValueError:
                   return False
-            
+                
+      @staticmethod   
       def convert_to_status_enum(status: str):
+           """Convert a valid status string to a ProjectStatus enum member."""
             return ProjectStatus(status)
 
-# R vs V: not sure if this is even needed
+
 def demonstrate_reference_vs_value():
+    """
+    Demonstrates the difference between assignment by reference and copying by value in lists.
+
+    - 'reference' points to the same list as 'original' (changes affect both).
+    - 'value_copy' is a shallow copy of 'original' (changes do not affect 'original').
+
+    Returns:
+        dict: Contains the three lists after appending different items to show the effects.
+    """
+
+    # Points to the same list object. Creates a shallow copy of the list original([:])
+    # Affects original(delta). Doesn't affect original(epsilon)
       original = ["alpha", "beta", "gamma"]
       reference = original
       value_copy = original[:]
@@ -556,9 +664,18 @@ def demonstrate_reference_vs_value():
       }
 
 
-#  a file system that gathers information on what type of machine you're using and
-# uses import subprocess and os for further clarification
+
 def export_tasks_to_csv(tasks_with_status, filepath="exported_tasks.csv"):
+    """
+    Export a list of tasks with their statuses to a CSV file.
+
+    Args:
+        tasks_with_status (list of tuples): Each tuple contains (task, status).
+        filepath (str): Path to the output CSV file. Defaults to "exported_tasks.csv".
+
+    Returns:
+        str: Success or error message.
+    """
       try:
             with open(filepath, "w") as f:
                   for task, status in tasks_with_status:
@@ -569,6 +686,15 @@ def export_tasks_to_csv(tasks_with_status, filepath="exported_tasks.csv"):
 
 
 def open_csv_file(filepath="exported_tasks.csv"):
+    """
+    Open a CSV file using the default application based on the operating system.
+
+    Args:
+        filepath (str): Path to the CSV file. Defaults to "exported_tasks.csv".
+
+    Returns:
+        str: Success or error message.
+    """
       try:
             if not os.path.exists(filepath):
                   return f"FileNotFoundError: '{filepath}' does not exist."
