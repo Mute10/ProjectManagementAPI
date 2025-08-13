@@ -1,59 +1,61 @@
-# Project Management API
+Project Management API
 
 A powerful backend API for managing the entire lifecycle of projects and tasks. Built with FastAPI and PostgreSQL, this system enables users to create, update, track, and analyze projects through clearly defined phases such as initiation, planning, execution, review, and completion.
 
-## 🚀 Features
+## Features
 
-- Create and manage projects with optional descriptions and timelines  
-- Track task statuses within multiple project phases  
-- Full CRUD operations for both projects and tasks  
-- Data persistence using PostgreSQL and SQLAlchemy ORM  
-- Cleanly separated logic, database models, and API routing  
-- Designed for performance and clarity in real-world backend environments  
+- Create and manage projects with optional descriptions and timelines
+- Track task statuses across multiple project phases
+- Full CRUD operations for projects and tasks
+- Data persistence using PostgreSQL and SQLAlchemy ORM
+- Clean separation of logic, database models, and API routing
+- Designed for performance and clarity in real-world backend environments
 - Optional CLI support for local usage and automation
 
-## 🧠 Why This Exists
+## Why
 
-This project was designed to demonstrate practical backend development skills, with a strong focus on:
-- Real-world CRUD implementation
-- Separation of concerns between database models, logic, and API
+- Real-world CRUD implementations
+- Separation of concerns between database models, business logic, and API layers
 - Clean, maintainable code structure
 - Readability and testability
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **FastAPI** — high-performance web framework  
-- **PostgreSQL** — relational database  
-- **SQLAlchemy** — ORM for database models  
-- **Pydantic** — data validation and schema management  
-- **unittest** — built-in Python testing  
-- **CLI (optional)** — for command-line project and task creation  
+- FastAPI — high-performance web framework
+- PostgreSQL — relational database
+- SQLAlchemy — ORM for database modeling
+- Pydantic — data validation and schema management
+- unittest — Python built-in testing framework
 
-## 📦 Installation
+ 
+## Installation
 
 ```bash
-# 1. Clone the repo
+
+1. Clone the repo
 git clone https://github.com/Mute10/ProjectManagementAPI.git
 cd ProjectManagementAPI
 
-# 2. Set up virtual environment (optional but recommended)
+2. Set up virtual environment (optional)
 python -m venv env
 source env/bin/activate  # On Windows: env\Scripts\activate
 
-# 3. Install dependencies
+3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Set up the database (PostgreSQL must be running)
-# Update your connection string in tools.py or via environment variables
+4. Configure PostgreSQL database
+ Update connection string in tools.py or via environment variables
 
-# 5. Run the app
+5. Run the app
 uvicorn API:app --reload
 
 
-Usage:
-Visit: http://localhost:8000/docs to explore the auto-generated Swagger UI
+## Usage:
+
+Access Swagger UI at: http://localhost:8000/docs
 Use curl, Postman, or the CLI (if configured) to create and manage projects and tasks
-All tasks are tied to a project and move through lifecycle phases
+All tasks are tied to projects and move through lifecycle phases
+
 
 Run tests with:
 python -m unittest file.py
