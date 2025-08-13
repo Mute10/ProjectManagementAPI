@@ -674,7 +674,7 @@ def export_tasks_to_csv(tasks_with_status, filepath="exported_tasks.csv"):
         filepath (str): Path to the output CSV file. Defaults to "exported_tasks.csv".
 
     Returns:
-        str: Success or error message.
+        Success or error message.
     """
       try:
             with open(filepath, "w") as f:
@@ -720,41 +720,75 @@ def open_csv_file(filepath="exported_tasks.csv"):
             return f"Unhandled error: {type(e).__name__} - {e}"
 
 
-# no idea what's going on here, functools?
+
 def case_study(self, task1, task2):
+        """
+        Basic method to simulate analysis of two tasks.
+        """
           process = f"Analyzing {task1} and {task2}"
           infrastructure = "tools"
           return f"{process} using {infrastructure}"
 
 class Monitoring(BeginningPhase):
+    """
+    Extends BeginningPhase by adding control mechanisms and
+    overriding the case_study method.
+    """
             def __init__(self, initiation, planning, execution, control):
                 super().__init__(initiation, planning, execution)
                 self.control = control
             def case_study(self, task1, task2):
+                """
+                Override: Analyze tasks with the same base logic.
+                """
                   process = f"Analyzing {task1} and {task2}"
                   infrastructure = "tools"
                   return f"{process} using {infrastructure}"
             def control_applied(self, risk):
+                """
+                Returns an action statement describing control measures
+                for a given risk.
+                """
                   return f"If '{risk}' occurs, apply control method {self.control}"
 
-# fast API route
+
 @app.get("/tasks/review")
 def get_reviewed_tasks():
+    """
+    API endpoint that returns reviewed tasks and placed into separate lists.
+
+    GET route @ /tasks/review.
+    It calls pm_phase.review_tasks() to get finished/unfinished tasks.
+    Returns the results as JSON with two keys.
+    """
       finished, unfinished = pm_phase.review_tasks()
       return {
             "finished" : finished,
             "unfinished" : unfinished
       }
 
-# max file name is 64 characters?
+
 @functools.lru_cache(maxsize=64)
 def memoized_effort_estimate(n):
+     """
+    Calculate the effort estimate using memoized Fibonacci recursion.
+    parameter: n (int): The task number or step for which to estimate effort.
+    Returns: The calculated effort estimate.
+    Uses LRU cache to store up to 64 previous results for efficiency.
+    """
       if n <= 1:
             return 1
       return memoized_effort_estimate(n -1) + memoized_effort_estimate(n -2)
 
-# variables that maintain the programs functionality
+
 pm_phase = Monitoring("initiation", "planning", "execution", "control")
+"""
+ initialization for project monitoring phase:
+
+. Creates a Monitoring object with lifecycle phases and control.
+. Loads tasks into the phase from various formats (lists, nested lists, dict).
+. Defines a task dependency graph representing workflow steps.
+"""
 pm_phase.load_tasks(["urgent client request", "check status report"])
 pm_phase.load_tasks([
     ["urgent meeting"],
@@ -769,7 +803,6 @@ pm_phase.load_tasks({
     "agile or waterfall?": "critical"
 })
 
-
 task_graph = {
       "Plan": ["Design", "Budget"],
       "Design": ["Prototyping"],
@@ -779,18 +812,20 @@ task_graph = {
       "Approval": []
       }
 
-#not sure about these three lines
+# Extract the current list of tasks from the project monitoring phase.
 task_list = pm_phase.tasks
-target = "urgent client request"
-csv_data = export_tasks_to_csv(task_list)
+target = "urgent client request" # set a target task name 
+csv_data = export_tasks_to_csv(task_list) # exports all tasks to a CSV formatted string.
 
-# allows users to search for tasks in the contianers by key words
+
+# Search for a target in the task list using binary search
 index = binary_search_task_by_title(task_list, target)
 if index != -1:
       print(f"Found '{target}' at index '{index}'")
 else: 
       print(f"'{target}' not found")
 
+# Perform a depth-first traversal of the task graph startign at "Plan"
 visted_order = dfs_traverse(task_graph, "Plan")
 result = pm_phase.case_study("A", "B")
 bp = BeginningPhase(pm_phase.initiation, pm_phase.planning, pm_phase.execution)    
@@ -826,8 +861,18 @@ def forecast_deadline(start_date: str, duration_days: int) -> str:
       return deadline.strftime("%Y-%m-%d")
 
 
-# pulls one type of data into another incase the files is placed into the wrong contianer
+
 class UnionFind:
+    """
+    Disjoint Set Union (Union-Find) data structure for efficiently managing
+    and merging groups of connected elements.
+
+    Methods:
+        add(person): Adds a new element as its own parent.
+        find(person): Finds the root parent of the element, applying path compression.
+        union(person1, person2): Merges two sets if they are different.
+        connected(person1, person2): Checks if two elements are in the same set.
+    """
       def __init__(self):
             self.parent = {}
             self.rank = {}
@@ -864,14 +909,19 @@ class UnionFind:
                   return False
             return self.find(person1) == self.find(person2)
 
-# do i even need this?
+
 class RollingAverageCalculator:
+    """
+    Tracks averages of effort estimates, task durations, and resources used for tasks.
+    Controls trends instead of raw values.
+    """
+
       def __init__(self, window_size=3):
             self.window_size = window_size
             self.values = []
 
       def add_value(self, val):
-            self.value.append(val)
+            self.values.append(val)
             if len(self.value) > self.window_size:
                   self.values.pop(0)
 
@@ -881,8 +931,14 @@ class RollingAverageCalculator:
             return sum(self.values) / len(self.values)
 
 
-# Linear probing short but sweet
+
 def linear_probe_insert(table: list, key: str, size: int = 10) -> int:
+      """
+      Insert a key into a hash table using linear probing.
+
+      Returns: The index at which the key was inserted.
+      Raises: Exception: If the hash table is full.
+      """
       index = sum(ord(c) for c in key) % size
       for i in range(size):
             probe_index = (index + i) % size
@@ -891,8 +947,19 @@ def linear_probe_insert(table: list, key: str, size: int = 10) -> int:
                   return probe_index
             raise Exception("Hash table is full.")
       
-# my main problem solver, this block finds the most optimal solution when unsure where a project should go
+
 class SimplexSolver:
+     """
+    Simplex algorithm solver for linear programming problems of the form:
+        maximize c^T x
+        subject to Ax <= b, x >= 0
+
+        a (list of lists): Constraint coefficients matrix (m x n).
+        b (list): Constraint bounds vector (length m).
+        c (list): Objective function coefficients (length n).
+
+    Methods: solve(): Runs the simplex algorithm to find the optimal solution.
+    """
       def __init__(self, a, b ,c):
             self.a = [row[:] for row in a]
             self.b = b[:]
@@ -901,8 +968,24 @@ class SimplexSolver:
             self.m = len(b)
             self.table = []
             self._build_table()
+          
+    def _build_table(self):
+        """
+        Build initial simplex tableau combining constraints and objective.
+        """
+        # Add slack variables to convert inequalities to equalities
+            for i in range(self.m):
+                self.a[i] += [0] * self.m
+                self.a[i][self.n + i] = 1
+
+            # Objective row (last row): negative coefficients of c and zeros for slack vars + 0 RHS
+            self.table = [self.a[i] + [self.b[i]] for i in range(self.m)]
+            self.table.append([-x for x in self.c] + [0] * (self.m + 1))
 
       def _pivot(self, row, col):
+        """
+        Perform pivoting on the tableau at the specified row and column.
+        """
             pivot_element = self.tablet[row][col]
             self.table[row] = [x / pivot_element for x in self.table[row]]
             for r in range(len(self.table)):
@@ -914,6 +997,9 @@ class SimplexSolver:
                         ]
 
       def solve(self):
+        """
+        Execute the simplex algorithm until an optimal solution is found.
+        """
             while True:
                   last_row = self.table[-1]
                   pivot_col = min(
@@ -924,7 +1010,8 @@ class SimplexSolver:
                   
                   if pivot_col == -1:
                         break
-
+                      
+                 # Computes ratios for pivot row selection (minimum positive ratio)
                   ratios = []
                   for i in range(self.m):
                         col_val = self.table[i][pivot_col]
@@ -934,7 +1021,9 @@ class SimplexSolver:
                         raise Exception("Unbound solution.")
                   _, pivot_row = min(ratios)
                   self._pivot_row(pivot_row, pivot_col) 
-
+                
+            # Extract solution vector from tableau
+            # Find if column j is basic variable
             solution = [0] * self.n
             for i in range(self.m):
                   for j in range(self.n):
